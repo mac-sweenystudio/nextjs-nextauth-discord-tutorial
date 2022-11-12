@@ -40,7 +40,8 @@ Open [http://localhost:3000](http://localhost:3000) with your browser to see the
 
 ## Explanation
 
-**[...nextauth].ts**
+**NextAuth API (Found in 'src/pages/api/auth[...nextauth].ts')**
+
 This file is how you add NextAuth.js to a project. It should be created in pages/api/auth. This contains the dynamic route handler for NextAuth.js which will also contain all of your global NextAuth.js configurations. 
 
 Specifically, the file contains the provider credentials (in this case Discord) which looks like this:
@@ -89,14 +90,32 @@ async jwt({ token, account, profile }: any) {
 Our second Callback is the __Session Callback__. It is called whenever a session is checked (When we want to see if the user is authenticated). We stored the accessToken, tokenType, and the profile into session, along with some basic user data (which comes as a default). Our __Session Callback__ looks like this: 
 
 ```
-    async session({ session, token, user }: any) {
-      if (session) {
-        session.accessToken = token.accessToken;
-        session.tokenType = token.tokenType;
-        session.discordUser = token.profile;
-      }
-      return session;
-    },
+async session({ session, token, user }: any) {
+  if (session) {
+    session.accessToken = token.accessToken;
+    session.tokenType = token.tokenType;
+    session.discordUser = token.profile;
+  }
+  return session;
+},
 ```
 
-## 
+
+
+**UseSession Hook (Found in 'src/hooks/useSession.ts')**
+
+The useSession Hook is where we push our __Session Data__ and __DiscordUser Object__ into the __UseSession__. We can then call this throughout our application. Our UseSession Hook looks like this:
+
+```
+export function useSession() {
+    return nextAuthUseSession() as {data: Session & {discordUser: DiscordProfile} | null}
+}
+```
+
+
+
+**GetServerSideProps (Found in 'src/pages/index.ts')**
+To put it simply, getServerSideProps enables a page to render server-side. getServerSideProps renders your client-side page server-side and returns a hydrated SEO-friendly HTML document to the browser. Meaning getServerSideProps pre-renders the page on each request using the data it retrieves from the server. This is particularly useful in our use-case as we want to pre-render the returned objects from our Discord API call. 
+
+We use the __unstable_getServerSession__ method. This is different from the traditional getSession() method, in that it does not do an extra fetch out over the internet to confirm data from itself, increasing performance significantly.
+
