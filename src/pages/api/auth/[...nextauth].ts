@@ -1,5 +1,5 @@
 import NextAuth from "next-auth";
-import type { NextAuthOptions } from 'next-auth'
+import type { NextAuthOptions } from "next-auth";
 import DiscordProvider from "next-auth/providers/discord";
 
 export const authOptions: NextAuthOptions = {
@@ -16,52 +16,24 @@ export const authOptions: NextAuthOptions = {
             "identify email guilds applications.commands.permissions.update",
         },
       },
-
-      // This is the profile function that we want to use to get the user's profile
-      async profile(profile, account) {
-        if (profile.avatar === null) {
-          const defaultAvatarNumber = parseInt(profile.discriminator) % 5;
-          profile.image_url = `https://cdn.discordapp.com/embed/avatars/${defaultAvatarNumber}.png`;
-        } else {
-          const format = profile.avatar.startsWith("a_") ? "gif" : "png";
-          profile.image_url = `https://cdn.discordapp.com/avatars/${profile.id}/${profile.avatar}.${format}`;
-        }
-
-        return {
-          id: profile.id,
-          name: profile.username,
-          discriminator: profile.discriminator,
-          image: profile.image_url,
-          accentColor: profile.accentColor,
-        };
-      },
     }),
   ],
   callbacks: {
     // This is the callback that we want to use to get oAuth tokens
-    async jwt({ token, account, profile}: any) {
-
+    async jwt({ token, account }: any) {
       if (account) {
         token.accessToken = account.access_token;
         token.tokenType = account.token_type;
       }
-      if (profile) {
-        token.profile = profile;
-      }
-
-
-
       return token;
     },
 
     // This is the callback that we want to use to get the session
-    async session({ session, token, user }: any) {
+    async session({ session, token }: any) {
       if (session) {
         session.accessToken = token.accessToken;
         session.tokenType = token.tokenType;
-        session.discordUser = token.profile;
       }
-
       return session;
     },
   },
