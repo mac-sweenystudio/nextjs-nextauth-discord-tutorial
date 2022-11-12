@@ -1,30 +1,58 @@
 import React from "react";
-import { DiscordGuild } from "next-auth";
-import { signIn } from "next-auth/react";
-import { useSession } from "../hooks/useSession";
+import { unstable_getServerSession } from "next-auth/next";
+import { authOptions } from "./api/auth/[...nextauth]";
+import Guilds from "../components/guilds";
+import { InferGetServerSidePropsType } from "next";
 
-const Home = () => {
-  const { data: session } = useSession();
-  const username = session?.user?.name as string;
-  const email = session?.user?.email as string;
-  const discordUser = session?.discordUser as unknown as string;
-  const discordGuilds = session?.discordUser?.guilds as DiscordGuild[];
+type Props = InferGetServerSidePropsType<typeof getServerSideProps>;
 
+export default function MyServers(props: Props) {
+  return (
+    <div className="bg-white w-full min-h-screen">
+          <Guilds guilds={props.guilds} />
+        </div>
+  );
+}
 
-  if (!session) {
-    return (
-      <div className="flex h-screen items-center justify-center">
-        <button
-          className="relative inline-flex items-center rounded-md border border-transparent bg-indigo-600 px-6 py-3 text-base font-medium text-white shadow-sm hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 cursor-pointer"
-          onClick={() => signIn("discord")}
-        >
-          Login
-        </button>
-      </div>
-    );
-  } else {
-    return <div className="flex h-screen items-center justify-center font-bold text-5xl">{username} is in {discordGuilds.length} discord servers! </div>;
+export async function getServerSideProps(context: any) {
+  const session = await unstable_getServerSession(
+    context.req,
+    context.res,
+    authOptions
+  );
+  const guildFetch = await fetch(
+    `https://discord.com/api/v10/users/@me/guilds`,
+    {
+      headers: {
+        // @ts-ignore
+        Authorization: `Bearer ${session?.accessToken}`,
+      },
+    }
+  );
+  const guilds = await guildFetch.json();
+  for (let i = 0; i < guilds.length; i++) {
+    if (guilds[i].owner === false) {
+      guilds.splice(i, 1);
+    }
+    if (guilds[i].icon === null) {
+      guilds[
+        i
+      ].icon_url = `https://cdn.discordapp.com/icons/1010422850483650570/7ce037d361cbacb995a9075c5cb28e58.png`;
+    } else {
+      guilds[
+        i
+      ].icon_url = `https://cdn.discordapp.com/icons/${guilds[i].id}/${guilds[i].icon}.png`;
+    }
+    if (guilds[i].owner === true) {
+      const removedObject = guilds.splice(i, 1);
+      console.log(removedObject[0]);
+      guilds.unshift(removedObject[0]);
+    }
   }
-};
-
-export default Home;
+  console.log(guilds)
+  return {
+    props: {
+      guilds,
+    },
+  };
+}
