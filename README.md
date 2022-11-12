@@ -1,4 +1,4 @@
-## Documentation Links:
+## Official Documentation Links:
 
 To view the different Discord API endpoints and data you can retrieve, visit: 
 ```https://discord.com/developers/docs/topics/oauth2```
@@ -156,6 +156,27 @@ if (guilds) {
     const format = user.avatar.startsWith("a_") ? "gif" : "png";
     user.image_url = `https://cdn.discordapp.com/avatars/${user.id}/${user.avatar}.${format}`;
   }
+```
+
+We are then able to use both the __DiscordGuilds__ and the __DiscordUser__ as a prop within any of our components. This could look like the following: 
+```
+export default function DiscordData(props: { guilds: DiscordGuild[], user: DiscordUser }) {
+  return (
+    <>
+      <div className="text-blue-600 font-bold text-4xl">
+        {props.user.username}
+      </div>
+      {props.guilds.map((guilds) => (
+        <div
+          key={guilds.id}
+          className="grid justify-items-start grid-cols-1 gap-x-12 gap-y-8 sm:grid-cols-2 sm:gap-x-12 lg:grid-cols-3 xl:gap-x-20 my-10 lg:mx-40"
+        >
+          {guilds.name}
+        </div>
+      ))}
+    </>
+  );
+}
 ```
 
 
