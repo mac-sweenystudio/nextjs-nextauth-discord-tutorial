@@ -57,19 +57,6 @@ authorization: {
 },
 ``` 
 
-The __profile function__ which is what nextauth uses to get the __DiscordUser object__. Which looks like this: 
-
-```
-async profile(profile, account) {
-  if (profile.avatar === null) {
-    const defaultAvatarNumber = parseInt(profile.discriminator) % 5;
-    profile.image_url = `https://cdn.discordapp.com/embed/avatars/${defaultAvatarNumber}.png`;
-  } else {
-    const format = profile.avatar.startsWith("a_") ? "gif" : "png";
-    profile.image_url = `https://cdn.discordapp.com/avatars/${profile.id}/${profile.avatar}.${format}`;
-  }
-```
-
 The [...nextauth].ts file also contains a set of callbacks. Callbacks are asynchronous functions you can use to control what happens when an action is performed. They are extremely powerful, especially in scenarios involving JSON Web Tokens as they allow you to implement access controls without a database and to integrate with external databases or APIs. 
 
 Our first Callback is the __JWT Callback__. It is called whenever a JSON Web Token is created (i.e. at sign in) or updated (i.e whenever a session is accessed in the client). The returned value will be encrypted, and it is stored in a cookie. Our __JWT Callbacl__ looks like this: 
@@ -102,20 +89,73 @@ async session({ session, token, user }: any) {
 
 
 
-**UseSession Hook (Found in 'src/hooks/useSession.ts')**
-
-The useSession Hook is where we push our __Session Data__ and __DiscordUser Object__ into the __UseSession__. We can then call this throughout our application. Our UseSession Hook looks like this:
-
-```
-export function useSession() {
-    return nextAuthUseSession() as {data: Session & {discordUser: DiscordProfile} | null}
-}
-```
-
-
-
 **GetServerSideProps (Found in 'src/pages/index.ts')**
 To put it simply, getServerSideProps enables a page to render server-side. getServerSideProps renders your client-side page server-side and returns a hydrated SEO-friendly HTML document to the browser. Meaning getServerSideProps pre-renders the page on each request using the data it retrieves from the server. This is particularly useful in our use-case as we want to pre-render the returned objects from our Discord API call. 
 
-We use the __unstable_getServerSession__ method. This is different from the traditional getSession() method, in that it does not do an extra fetch out over the internet to confirm data from itself, increasing performance significantly.
+We use the __unstable_getServerSession__ method. This is different from the traditional getSession() method you may see in other tutorials, in that it does not do an extra fetch out over the internet to confirm data from itself, increasing performance significantly. Our __getServerSideProps__ Session looks like the following: 
+
+```
+const session = await unstable_getServerSession(
+  context.req,
+  context.res,
+  authOptions
+);
+```
+
+We then fetch the __DiscordGuilds__ Object which looks like:
+
+```
+const guildFetch = await fetch(
+  `https://discord.com/api/v10/users/@me/guilds`,
+  {
+    headers: {
+      // @ts-ignore
+      Authorization: `Bearer ${session?.accessToken}`,
+    },
+  }
+);
+const guilds = await guildFetch.json();
+```
+
+Finally, we fetch the __DiscordUser__ Object which looks like:
+
+```
+const userFetch = await fetch(`https://discord.com/api/v10/users/@me`, {
+  headers: {
+    // @ts-ignore
+    Authorization: `Bearer ${session?.accessToken}`,
+  },
+});
+const user = await userFetch.json();
+```
+
+We are then able to modify our __DiscordUser__ and __DiscordGuilds__ Object. 
+
+An example of modifying the __DiscordUser__ Object could be: 
+
+```
+if (user) {
+  for (let i = 0; i < user.length; i++) {
+    if (user.icon === null) {
+      user.icon_url = `https://cdn.discordapp.com/icons/1010422850483650570/7ce037d361cbacb995a9075c5cb28e58.png`;
+    } else {
+      user.icon_url = `https://cdn.discordapp.com/icons/${user.id}/${user.icon}.png`;
+    }
+  }
+}
+```
+
+or modifying the __DiscordGuilds__ could look like: 
+
+```
+if (guilds) {
+  if (user.avatar === null) {
+    const defaultAvatarNumber = parseInt(user.discriminator) % 5;
+    user.image_url = `https://cdn.discordapp.com/embed/avatars/${defaultAvatarNumber}.png`;
+  } else {
+    const format = user.avatar.startsWith("a_") ? "gif" : "png";
+    user.image_url = `https://cdn.discordapp.com/avatars/${user.id}/${user.avatar}.${format}`;
+  }
+```
+
 
