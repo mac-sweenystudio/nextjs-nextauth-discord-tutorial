@@ -46,7 +46,7 @@ This file is how you add NextAuth.js to a project. It should be created in pages
 
 Specifically, the file contains the provider credentials (in this case Discord) which looks like this:
 
-```
+```js
 clientId: process.env.DISCORD_CLIENT_ID as string,
 clientSecret: process.env.DISCORD_CLIENT_SECRET as string,
 authorization: {
@@ -61,7 +61,7 @@ The [...nextauth].ts file also contains a set of callbacks. Callbacks are asynch
 
 Our first Callback is the __JWT Callback__. It is called whenever a JSON Web Token is created (i.e. at sign in) or updated (i.e whenever a session is accessed in the client). The returned value will be encrypted, and it is stored in a cookie. Our __JWT Callbacl__ looks like this: 
 
-```
+```js
 async jwt({ token, account, profile }: any) {
   if (account) {
     token.accessToken = account.access_token;
@@ -76,7 +76,7 @@ async jwt({ token, account, profile }: any) {
 
 Our second Callback is the __Session Callback__. It is called whenever a session is checked (When we want to see if the user is authenticated). We stored the accessToken, tokenType, and the profile into session, along with some basic user data (which comes as a default). Our __Session Callback__ looks like this: 
 
-```
+```js
 async session({ session, token, user }: any) {
   if (session) {
     session.accessToken = token.accessToken;
