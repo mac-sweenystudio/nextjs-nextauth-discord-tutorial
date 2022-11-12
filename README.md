@@ -94,7 +94,7 @@ To put it simply, getServerSideProps enables a page to render server-side. getSe
 
 We use the __unstable_getServerSession__ method. This is different from the traditional getSession() method you may see in other tutorials, in that it does not do an extra fetch out over the internet to confirm data from itself, increasing performance significantly. Our __getServerSideProps__ Session looks like the following: 
 
-```
+```js
 const session = await unstable_getServerSession(
   context.req,
   context.res,
@@ -104,7 +104,7 @@ const session = await unstable_getServerSession(
 
 We then fetch the __DiscordGuilds__ Object which looks like:
 
-```
+```js
 const guildFetch = await fetch(
   `https://discord.com/api/v10/users/@me/guilds`,
   {
@@ -119,7 +119,7 @@ const guilds = await guildFetch.json();
 
 Finally, we fetch the __DiscordUser__ Object which looks like:
 
-```
+```js
 const userFetch = await fetch(`https://discord.com/api/v10/users/@me`, {
   headers: {
     // @ts-ignore
@@ -133,7 +133,7 @@ We are then able to modify our __DiscordUser__ and __DiscordGuilds__ Object.
 
 An example of modifying the __DiscordUser__ Object could be: 
 
-```
+```js
 if (user) {
   for (let i = 0; i < user.length; i++) {
     if (user.icon === null) {
@@ -147,7 +147,7 @@ if (user) {
 
 or modifying the __DiscordGuilds__ could look like: 
 
-```
+```js
 if (guilds) {
   if (user.avatar === null) {
     const defaultAvatarNumber = parseInt(user.discriminator) % 5;
@@ -159,7 +159,7 @@ if (guilds) {
 ```
 
 We are then able to use both the __DiscordGuilds__ and the __DiscordUser__ as a prop within any of our components. This could look like the following: 
-```
+```js
 export default function DiscordData(props: { guilds: DiscordGuild[], user: DiscordUser }) {
   return (
     <>
@@ -177,17 +177,5 @@ export default function DiscordData(props: { guilds: DiscordGuild[], user: Disco
     </>
   );
 }
-```
-```json
-   // code for coloring
-```
-```html
-   // code for coloring
-```
-```js
-   // code for coloring
-```
-```css
-   // code for coloring
 ```
 
