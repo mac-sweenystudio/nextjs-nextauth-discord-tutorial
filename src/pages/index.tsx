@@ -1,8 +1,8 @@
 import React from "react";
 import { unstable_getServerSession } from "next-auth/next";
+import { InferGetServerSidePropsType } from "next";
 import { authOptions } from "./api/auth/[...nextauth]";
 import Guilds from "../components/guilds";
-import { InferGetServerSidePropsType } from "next";
 
 type Props = InferGetServerSidePropsType<typeof getServerSideProps>;
 
@@ -14,12 +14,15 @@ export default function MyServers(props: Props) {
   );
 }
 
+// nextJS will call this function on the page being loaded
 export async function getServerSideProps(context: any) {
   const session = await unstable_getServerSession(
     context.req,
     context.res,
     authOptions
   );
+  
+  // The request we make to discords API
   const guildFetch = await fetch(
     `https://discord.com/api/v10/users/@me/guilds`,
     {
@@ -29,6 +32,10 @@ export async function getServerSideProps(context: any) {
       },
     }
   );
+
+  // The response we get from discords API (the guilds)
+  // This part isn't necessary, I just wanted to demonstrate how to use the response
+  
   const guilds = await guildFetch.json();
   for (let i = 0; i < guilds.length; i++) {
     if (guilds[i].owner === false) {

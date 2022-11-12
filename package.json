@@ -9,7 +9,6 @@
     "lint": "next lint"
   },
   "dependencies": {
-    "discord-oauth2": "^2.10.1",
     "next": "13.0.2",
     "next-auth": "^4.16.4",
     "react": "18.2.0",

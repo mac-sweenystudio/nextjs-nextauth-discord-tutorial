@@ -1,21 +1,23 @@
 import NextAuth from "next-auth";
 import type { NextAuthOptions } from 'next-auth'
 import DiscordProvider from "next-auth/providers/discord";
-import DiscordOauth2 from "discord-oauth2";
-const oauth = new DiscordOauth2();
 
 export const authOptions: NextAuthOptions = {
   // Configure one or more authentication providers
   providers: [
+    // Discord OAuth2 provider
     DiscordProvider({
       clientId: process.env.DISCORD_CLIENT_ID as string,
       clientSecret: process.env.DISCORD_CLIENT_SECRET as string,
       authorization: {
         params: {
+          // This is the scope that we want to request from Discord
           scope:
             "identify email guilds applications.commands.permissions.update",
         },
       },
+
+      // This is the profile function that we want to use to get the user's profile
       async profile(profile, account) {
         if (profile.avatar === null) {
           const defaultAvatarNumber = parseInt(profile.discriminator) % 5;
@@ -36,6 +38,7 @@ export const authOptions: NextAuthOptions = {
     }),
   ],
   callbacks: {
+    // This is the callback that we want to use to get oAuth tokens
     async jwt({ token, account, profile}: any) {
 
       if (account) {
@@ -51,6 +54,7 @@ export const authOptions: NextAuthOptions = {
       return token;
     },
 
+    // This is the callback that we want to use to get the session
     async session({ session, token, user }: any) {
       if (session) {
         session.accessToken = token.accessToken;

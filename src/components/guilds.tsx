@@ -1,5 +1,6 @@
 import { DiscordGuild } from "next-auth";
 
+// Just a standard react component
 export default function Guilds({ guilds }: { guilds: DiscordGuild[] }) {
   return (
     <>
