@@ -32,6 +32,7 @@ export async function getServerSideProps(context: any) {
       },
     }
   );
+  const guilds = await guildFetch.json();
 
   // The User request we make to discords API
   const userFetch = await fetch(`https://discord.com/api/v10/users/@me`, {
@@ -40,18 +41,21 @@ export async function getServerSideProps(context: any) {
       Authorization: `Bearer ${session?.accessToken}`,
     },
   });
+  const user = await userFetch.json();
 
   // The response we get from discords API (the guilds)
   // This part isn't necessary, I just wanted to demonstrate how to use the response
-
-  const guilds = await guildFetch.json();
-  const user = await userFetch.json();
-
   if (user) {
+    if (user.avatar === null) {
+      const defaultAvatarNumber = parseInt(user.discriminator) % 5;
+      user.image_url = `https://cdn.discordapp.com/embed/avatars/${defaultAvatarNumber}.png`;
+    } else {
+      const format = user.avatar.startsWith("a_") ? "gif" : "png";
+      user.image_url = `https://cdn.discordapp.com/avatars/${user.id}/${user.avatar}.${format}`;
+    }
+  }
+  if (guilds) {
     for (let i = 0; i < guilds.length; i++) {
-      if (guilds[i].owner === false) {
-        guilds.splice(i, 1);
-      }
       if (guilds[i].icon === null) {
         guilds[
           i
@@ -61,19 +65,6 @@ export async function getServerSideProps(context: any) {
           i
         ].icon_url = `https://cdn.discordapp.com/icons/${guilds[i].id}/${guilds[i].icon}.png`;
       }
-      if (guilds[i].owner === true) {
-        const removedObject = guilds.splice(i, 1);
-        guilds.unshift(removedObject[0]);
-      }
-    }
-  }
-  if (guilds) {
-    if (user.avatar === null) {
-      const defaultAvatarNumber = parseInt(user.discriminator) % 5;
-      user.image_url = `https://cdn.discordapp.com/embed/avatars/${defaultAvatarNumber}.png`;
-    } else {
-      const format = user.avatar.startsWith("a_") ? "gif" : "png";
-      user.image_url = `https://cdn.discordapp.com/avatars/${user.id}/${user.avatar}.${format}`;
     }
     console.log(guilds, user);
     return {
